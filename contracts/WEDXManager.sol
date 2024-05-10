@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import "./IWEDXInterfaces.sol";
 import "./WEDXConstants.sol";
-import "./distroMath.sol";
+import "./library/distroMath.sol";
 
 contract WEDXManager is WEDXConstants {
 

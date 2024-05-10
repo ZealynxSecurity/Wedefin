@@ -5,7 +5,7 @@ pragma abicoder v2;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./IWEDXInterfaces.sol";
 import "./WEDXConstants.sol";
-import "./distroMath.sol";
+import "./library/distroMath.sol";
 
 contract WEDXTreasury is ERC20, WEDXConstants {
 

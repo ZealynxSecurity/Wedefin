@@ -12,7 +12,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./IWEDXInterfaces.sol";
 import "./WEDXConstants.sol";
-import "./distroMath.sol";
+import "./library/distroMath.sol";
 
 contract WEDXBasePortfolio is WEDXConstants, Ownable {
     using SafeMath for uint256;
@@ -34,7 +34,7 @@ contract WEDXBasePortfolio is WEDXConstants, Ownable {
     }
 
     //Receive native cryptocurrency and deposit it into the portfolio.
-    function deposit() public virtual payable onlyOwner returns(uint256) {
+    function deposit() public virtual payable onlyOwner returns(uint256) { 
         require( msg.value > 0, "Native assets must be paid" );
         uint256 fee = ( msg.value * IWEDXManager(IWEDXGroup(_wedxGroupAddress).getAssetManagerAddress()).depositWithdrawFee() ) / distroMath.distroNorm;
         IWEDXTreasury(IWEDXGroup(_wedxGroupAddress).getTreasuryAddress()).depositGeneralFee{value: fee}();
@@ -107,7 +107,7 @@ contract WEDXBasePortfolio is WEDXConstants, Ownable {
         total_wnative = total_wnative - fee;
 
         if (total_wnative > 0 && address(this).balance >= total_wnative) {
-            address payable sender = payable(msg.sender);
+            address payable sender = payable(msg.sender); // @audit to be fair, the msg.sender will always be the owner
             (bool success, ) = sender.call{value: total_wnative}("");
             require(success, "Withdrawal failed");
         }
@@ -121,10 +121,10 @@ contract WEDXBasePortfolio is WEDXConstants, Ownable {
             if (tokenAmount > 0) {
                 if ( tokenAddresses[i] != WNATIVE ) {
                     TransferHelper.safeTransfer( tokenAddresses[i], msg.sender, tokenAmount );
-                    totalAssets[tokenAddresses[i]] -= tokenAmount;
+                    totalAssets[tokenAddresses[i]] -= tokenAmount; // @audit-issue no Check-Effects-Interactions pattern followed
                 } else {
                     cWNATIVE.withdraw(tokenAmount);
-                    totalAssets[tokenAddresses[i]] -= tokenAmount;
+                    totalAssets[tokenAddresses[i]] -= tokenAmount; // @audit-issue no Check-Effects-Interactions pattern followed
                     uint256 newAmount = address(this).balance;
                     address payable sender = payable(msg.sender);
                     (bool success, ) = sender.call{value: newAmount}("");
@@ -140,9 +140,9 @@ contract WEDXBasePortfolio is WEDXConstants, Ownable {
 
     //Change the tokens and distribution in the portfolio 
     function _setPortfolio(address[] memory newAssets, uint256[] memory newDistribution, uint256 fee) internal virtual returns (uint256) {
-        require( newDistribution.length == newAssets.length+1, "The distribution array length must equal the number of new assets + native asset");
+        require( newDistribution.length == newAssets.length + 1, "The distribution array length must equal the number of new assets + native asset");
         uint256 totalNewDistribution = 0;
-        for (uint256 i = 0; i < newDistribution.length; i++) {
+        for (uint256 i = 0; i < newDistribution.length; i++) { // @audit-issue gas griefing due to unbounded parameters 
             totalNewDistribution += newDistribution[i];
         }
         require( totalNewDistribution == distroMath.distroNorm, "Distribution must be normalized");
@@ -160,7 +160,7 @@ contract WEDXBasePortfolio is WEDXConstants, Ownable {
                 if ( !distroMath.isInNewAssets(tokenAddresses[i], newAssets) && totalAssets[tokenAddresses[i]] > 0 && tokenAddresses[i] != WNATIVE ){
                     TransferHelper.safeApprove( tokenAddresses[i], IWEDXGroup(_wedxGroupAddress).getSwapContractAddress(), totalAssets[tokenAddresses[i]] );
                     uint256 amountOut = IWEDXswap(IWEDXGroup(_wedxGroupAddress).getSwapContractAddress()).swapERC20(tokenAddresses[i], WNATIVE, totalAssets[tokenAddresses[i]], maxSlippage);
-                    totalAssets[tokenAddresses[i]] = 0;
+                    totalAssets[tokenAddresses[i]] = 0; // @audit-issue no Check-Effects-Interactions pattern followed
                     totalAssets[WNATIVE] += amountOut;
                 }
             }

@@ -18,7 +18,7 @@ contract WEDXGroup is Ownable {
     address private _swapContractAddress;
     address private _lenderContractAddress;
 
-    constructor(address initialOwner) Ownable(initialOwner) {}
+    constructor(address initialOwner) Ownable(initialOwner) {} // @audit recommend Ownable2Step
 
     function getTreasuryAddress() public view returns (address) {
         return _treasuryContractAddress;

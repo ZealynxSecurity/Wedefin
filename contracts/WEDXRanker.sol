@@ -25,7 +25,7 @@ contract WEDXRanker {
         int256 x0 = int256(timeSeries[0]);
         int256 sigma = 0;
         uint256 minLiquidity = liquiditySeries[0];
-        for (uint256 i = 0; i < _nPoints; i++) {
+        for (uint256 i = 0; i < _nPoints; i++) { // @audit Gas Griefing due to run out of gas??
             int256 y = int256(performanceSeries[i]);
             int256 x = int256(timeSeries[i]);
             int256 absD = y - ((((y1 - y0) * (x - x0)) / (x1 - x0)) + y0);

@@ -15,7 +15,7 @@ import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 
 import "./WEDXConstants.sol";
-import "./distroMath.sol";
+import "./library/distroMath.sol";
 import "./IWEDXInterfaces.sol";
 
 contract WEDXswap is uniV3Constants {

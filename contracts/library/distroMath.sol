@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 
 library distroMath {
 
-    uint256 public constant distroNorm = 10 ** 6;
+    uint256 public constant distroNorm = 10 ** 6; // @audit constants should be uppercase
 
     // Normalize the distribution of assets to distroNorm
     function normalize(uint256[] memory distro) internal pure returns (uint256[] memory) {

@@ -36,14 +36,14 @@ contract WEDXlender {
     }
 
     //Lend a token defined by the address and the amount. This function can only be executed by the Pro or Transactions contracts.
-    function lendToken(address tokenAddress, uint256 amount) public {
+    function lendToken(address tokenAddress, uint256 amount) public { // @audit-issue No Restricted Access Control to the Pro or Transactions contracts
         require( IERC20(tokenAddress).allowance(msg.sender, address(this)) >= amount, "Not enough allowance to smart contract" );
         if ( lenderSingle[msg.sender] == address(0) ) {
             address deployedContract = address( new WEDXlenderSingle( address(this) ) );  
             lenderSingle[msg.sender] = deployedContract;                  
         }
-        TransferHelper.safeTransferFrom( tokenAddress, msg.sender, address(this), amount );
-        TransferHelper.safeTransfer( tokenAddress, lenderSingle[msg.sender], amount );
+        TransferHelper.safeTransferFrom( tokenAddress, msg.sender, address(this), amount ); // @audit CEI Pattern? Reentrancy?
+        TransferHelper.safeTransfer( tokenAddress, lenderSingle[msg.sender], amount ); 
         IWEDXlenderSingle(lenderSingle[msg.sender]).lendToken(tokenAddress, amount);
     }
 
