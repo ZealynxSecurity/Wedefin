@@ -11,7 +11,7 @@ contract WEDXTreasury is ERC20, WEDXConstants {
 
     constructor() ERC20("WeDeFin Treasury", "WEDT") {}
 
-    function depositGeneralFee() public payable {
+    function depositGeneralFee() public payable { //@audit => anyone can mint?
         _mint( IWEDXGroup(_wedxGroupAddress).owner(), msg.value );
     }
 

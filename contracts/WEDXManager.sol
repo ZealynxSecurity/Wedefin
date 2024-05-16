@@ -81,7 +81,7 @@ contract WEDXManager is WEDXConstants {
 
         if ( traderData[traderId].performances.length == 0 ) {
 
-            if ( sum == distroMath.distroNorm ) {
+            if ( sum == distroMath.distroNorm ) { //@audit => Y si no es == que pasa 
                 uint256[] memory capitals = new uint256[](1);
                 uint256[] memory times = new uint256[](1);
                 uint256[] memory liquidities = new uint256[](1);
@@ -96,12 +96,12 @@ contract WEDXManager is WEDXConstants {
         } else {
 
             if ( sum == distroMath.distroNorm ) {
-                require( block.timestamp > traderData[traderId].timestamps[traderData[traderId].timestamps.length-1], "Timestamp invalid or wait longer" );
+                require( block.timestamp > traderData[traderId].timestamps[traderData[traderId].timestamps.length-1], "Timestamp invalid or wait longer" ); //@audit => logica repetida
                 uint256 capital = _getCapital( traderData[traderId].currentPortfolio, traderData[traderId].currentTokenAddresses );
                 traderData[traderId].performances.push(capital);
                 traderData[traderId].timestamps.push(block.timestamp);
                 traderData[traderId].minLiquidity.push(_getMinLiquidity(assets));
-                if (traderData[traderId].performances.length > _nPoints) {
+                if (traderData[traderId].performances.length > _nPoints) { //@audit => que pasa si hay <= 5
                     for( uint i = 0; i < _nPoints; i++ ){
                         traderData[traderId].performances[i] = traderData[traderId].performances[i+1];
                         traderData[traderId].timestamps[i] = traderData[traderId].timestamps[i+1];
@@ -116,7 +116,7 @@ contract WEDXManager is WEDXConstants {
                 traderData[traderId].currentDistro = distro;
 
                 emit TraderUpdate(traderId, block.timestamp, capital);
-            } else {
+            } else { //@audit => no entiendo muy bien
                 trader memory defaultTrader;
                 rank memory defaultRank;
                 traderData[traderId] = defaultTrader;

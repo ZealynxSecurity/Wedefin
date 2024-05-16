@@ -1,0 +1,1 @@
+{"data":[[0,{"call_type":"FirstLevelCall","caller":"0xe1a425f1ac34a8a441566f93c82dd730639c8510","contract":"contracts/WEDXManager.sol:WEDXManager(0x08fdb50081b171e1a0759216e670dde08337f195)","input":"3a950b39","value":"0","source":{"file":"contracts/WEDXManager.sol","file_idx":7,"offset":454,"length":17658},"results":""}]]}
