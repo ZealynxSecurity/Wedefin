@@ -13,6 +13,8 @@ contract MintingTest is Test {
     MockWEDXManager mockWEDXManager;
     ReentrancyAttack attacker;
     address payable thirdParty;
+    address payable alice = payable(vm.addr(1));
+
 
     event Log(string message, uint256 value);
 
@@ -64,37 +66,58 @@ contract MintingTest is Test {
         assertGt(attackerBalance, 0, "The attacker did not receive tokens");
     }
 
-    // Test 4: Demonstrate a possible reentrancy attack in redeem
-    function testReentrancy() public {
-        // Provide funds to the attacker contract
-        vm.deal(address(attacker), 4 ether);
-        deal(address(treasury), address(attacker), 5 ether);
-        treasury.depositGeneralFee{value: 4 ether}();
+// Test 4: Demonstrate a possible reentrancy attack in redeem
+function testReentrancy() public {
+    // Provide funds to the attacker contract
+    vm.deal(address(attacker), 4 ether);
+    deal(address(treasury), address(attacker), 5 ether);
+    // treasury.depositGeneralFee{value: 4 ether}();
+    attacker.depositfirst{value: 4 ether}();
 
-        uint256 initialTreasuryBalance = address(treasury).balance;
-        uint256 initialAttackerBalance = address(attacker).balance;
+    // Provide funds to the treasury contract from a third-party account
+    vm.deal(address(alice), 4 ether);
+    deal(address(treasury), address(alice), 5 ether);
+    vm.prank(alice);
+    treasury.depositGeneralFee{value: 4 ether}();
 
-        emit Log("Initial Treasury Balance", initialTreasuryBalance);
-        emit Log("Initial Attacker Balance", initialAttackerBalance);
+    uint256 initialTreasuryBalance = address(treasury).balance;
+    uint256 initialAttackerBalance = address(attacker).balance;
+    uint256 initialThirdPartyBalance = address(alice).balance;
 
-        console2.log("initialTreasuryBalance", initialTreasuryBalance);
-        console2.log("initialAttackerBalance", initialAttackerBalance);
+    emit Log("Initial Treasury Balance", initialTreasuryBalance);
+    emit Log("Initial Attacker Balance", initialAttackerBalance);
+    emit Log("Initial Alice Balance", initialThirdPartyBalance);
 
-        // Perform reentrancy attack
-        attacker.attack{value: 1 ether}();
+    console2.log("initialTreasuryBalance", initialTreasuryBalance);
+    console2.log("initialAttackerBalance", initialAttackerBalance);
+    console2.log("Initial Alice Balance", initialThirdPartyBalance);
 
-        uint256 finalTreasuryBalance = address(treasury).balance;
-        uint256 finalAttackerBalance = address(attacker).balance;
+    // Perform reentrancy attack
+    attacker.attack{value: 1 ether}();
 
-        emit Log("Final Treasury Balance", finalTreasuryBalance);
-        emit Log("Final Attacker Balance", finalAttackerBalance);
+    uint256 finalTreasuryBalance = address(treasury).balance;
+    uint256 finalAttackerBalance = address(attacker).balance;
+    uint256 finalThirdPartyBalance = address(alice).balance;
 
-        console2.log("finalTreasuryBalance", finalTreasuryBalance);
-        console2.log("finalAttackerBalance", finalAttackerBalance);
+    emit Log("Final Treasury Balance", finalTreasuryBalance);
+    emit Log("Final Attacker Balance", finalAttackerBalance);
+    emit Log("Final Alice Balance", finalThirdPartyBalance);
 
-        assertLt(finalTreasuryBalance, initialTreasuryBalance, "Reentrancy attack failed");
-        assertGt(finalAttackerBalance, initialAttackerBalance, "The attacker did not gain funds");
-    }
+    console2.log("finalTreasuryBalance", finalTreasuryBalance);
+    console2.log("finalAttackerBalance", finalAttackerBalance);
+    console2.log("Final Alice Balance", finalThirdPartyBalance);
+
+    assertLt(finalTreasuryBalance, initialTreasuryBalance, "Reentrancy attack failed");
+    assertGt(finalAttackerBalance, initialAttackerBalance, "The attacker did not gain funds");
+
+    // Attempt to withdraw funds from Alice after the attack
+    vm.prank(alice);
+    (bool withdrew,) = address(treasury).call(abi.encodeWithSignature("redeem(uint256)", 1 ether));
+    emit Log("Third Party Withdraw Attempt", withdrew ? 1 : 0);
+
+    console2.log("Third Party Withdraw Attempt", withdrew ? 1 : 0);
+}
+
 
     // Test 5: Verify that the minted token amount does not exceed the Ether sent
     function testMintingExactAmount() public {

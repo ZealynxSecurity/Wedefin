@@ -49,15 +49,14 @@ contract WEDXTreasury is ERC20, WEDXConstants {
     }
 
     function redeem(uint256 amount) public returns (uint256) {
-        require(balanceOf(msg.sender) >= amount, "Insufficient balance");
+        require( balanceOf(msg.sender) >= amount, "Insufficient balance" );
         address payable sender = payable(msg.sender);
-        _burn(msg.sender, amount);
         (bool success, ) = sender.call{value: amount}("");
         require(success, "Withdrawal failed");
+        _burn( msg.sender, amount );
         console.log("ESTOY DESPUES DE BURN");
         return amount;
     }
-
     receive() external payable {
         _mint(IWEDXGroup(_wedxGroupAddr).owner(), msg.value);
     }
