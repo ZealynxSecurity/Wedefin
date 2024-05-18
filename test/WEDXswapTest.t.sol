@@ -61,6 +61,11 @@ contract WEDXswapTest is Test {
         assertTrue(result.feeUniswap >= 0);
         assertTrue(result.liquidity >= 0);
     }
+    function testSwapNative() public {
+        swapContract.swapNative(WETH, 10);
+
+
+    }
 }
 
 //forge test --fork-url https://eth-mainnet.g.alchemy.com/v2/Se-CTmWnCJVhHI6Sz_-rWeu5xUuJ81t- --mc WEDXswapTest --mt testValidatePoolOnchainWithDifferentTokens -vvvv

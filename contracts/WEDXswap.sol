@@ -28,12 +28,16 @@ contract WEDXswap is uniV3Constants {
 
     uint24[] private uniAllowedFees = [100, 500, 3000, 10000];
 
-    constructor() {
-        for( uint16 i = 0; i < _uniswapRouterAddress.length; i++ ) {
-            router.push(  ISwapRouter(_uniswapRouterAddress[i]) );
-            poolFactory.push( IUniswapV3Factory(_uniswapPoolFactoryAddress[i]) );
-        }
+constructor() {
+    for (uint16 i = 0; i < _uniswapRouterAddress.length; i++) {
+        require(_uniswapRouterAddress[i] != address(0), "Invalid router address");
+        require(_uniswapPoolFactoryAddress[i] != address(0), "Invalid factory address");
+        router.push(ISwapRouter(_uniswapRouterAddress[i]));
+        poolFactory.push(IUniswapV3Factory(_uniswapPoolFactoryAddress[i]));
+        console.log("Configured poolFactory[%s]: %s", i, _uniswapPoolFactoryAddress[i]);
     }
+}
+
 
     //Swap native tokens for another token using a pool.
     function swapNative( address tokenOut, uint256 maxSlippage ) public payable returns (uint256) {
@@ -129,28 +133,39 @@ contract WEDXswap is uniV3Constants {
     }
 
     //Check if there is an existing pool for that pair and if exists, then record it
-    function validatePool( address tokenIn, address tokenOut ) public view returns (exInfo memory) { //@audit => loop
-        exInfo memory result;
-        uint128 refLiquidity = 0;
-        for(uint16 j=0; j < poolFactory.length; j++) {
-            for(uint16 i=0; i < uniAllowedFees.length; i++) {
-                address poolAddress = poolFactory[j].getPool( tokenIn, tokenOut, uniAllowedFees[i] );
-                if ( poolAddress != address(0) ) {
-                    IUniswapV3Pool pool = IUniswapV3Pool(poolAddress);
-                    uint128 liquidity = pool.liquidity();
-                    if ( liquidity > refLiquidity ) {
+function validatePool(address tokenIn, address tokenOut) public view returns (exInfo memory) {
+    require(tokenIn != tokenOut, "Tokens must be different");
+
+    exInfo memory result;
+    uint128 refLiquidity = 0;
+
+    for (uint16 j = 0; j < poolFactory.length; j++) {
+        for (uint16 i = 0; i < uniAllowedFees.length; i++) {
+            console.log("Checking poolFactory[%s] and uniAllowedFees[%s]", j, i);
+            address poolAddress = poolFactory[j].getPool(tokenIn, tokenOut, uniAllowedFees[i]);
+            console.log("Pool address: %s", poolAddress);
+
+            if (poolAddress != address(0)) {
+                try IUniswapV3Pool(poolAddress).liquidity() returns (uint128 liquidity) {
+                    console.log("Liquidity: %s", liquidity);
+                    if (liquidity > refLiquidity) {
                         refLiquidity = liquidity;
-                        if ( tokenIn != WNATIVE ) {
-                            result = exInfo(j, uniAllowedFees[i], refLiquidity); 
-                        } else {
-                            result = exInfo(j, uniAllowedFees[i], refLiquidity); 
-                        }
+                        result = exInfo(j, uniAllowedFees[i], refLiquidity);
                     }
+                } catch Error(string memory reason) {
+                    console.log("Error accessing liquidity for pool: %s with reason: %s", poolAddress, reason);
+                } catch (bytes memory /* lowLevelData */) {
+                    console.log("Low-level error accessing liquidity for pool: %s", poolAddress);
                 }
+            } else {
+                console.log("No pool found for poolFactory[%s] and uniAllowedFees[%s]", j, i);
             }
         }
-        return result;
     }
+    require(result.liquidity > 0, "No valid pool found");
+    return result;
+}
+
 
     function getAssetPoolLiquidity( address tokenAddress ) public view returns (uint128) {
         exInfo memory ex = validatePool( tokenAddress, WNATIVE );
