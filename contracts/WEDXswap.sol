@@ -18,6 +18,9 @@ import "./WEDXConstants.sol";
 import "./library/distroMath.sol";
 import "./IWEDXInterfaces.sol";
 
+import {console} from "forge-std/Test.sol";
+
+
 contract WEDXswap is uniV3Constants {
     using SafeMath for uint256;
     ISwapRouter[] private router;
