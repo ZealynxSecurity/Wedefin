@@ -1,8 +1,4 @@
-Contract: test/WEDXManagerTest.t.sol:WEDXManagerTest(0x7fa9385be102ac3eac297483dd6233d62b3e1496)
-Instruction Coverage: 164/13833 (1.19%) 
-Branch Coverage: 2/736 (0.27%) 
---------------------------------
-Contract: contracts/WEDXManager.sol:WEDXManager(0x08fdb50081b171e1a0759216e670dde08337f195)
-Instruction Coverage: 887/11289 (7.86%) 
-Branch Coverage: 45/606 (7.43%) 
+Contract: contracts/WEDXBasePortfolio.sol:WEDXBasePortfolio(0x60f500fba04b83e12de7a20fe9839d9716d214a0)
+Instruction Coverage: 196/4793 (4.09%) 
+Branch Coverage: 18/288 (6.25%) 
 --------------------------------
