@@ -41,6 +41,29 @@ address constant _wedxGroupAddress = 0x64B2079EC8aBa8cF1C9827916702Bf13C89f9584;
 
 contract WEDXConstants {
     address[] public tokenAddressesInit = [WNATIVE]; // replace with the actual addresses of the tokens
+
+    address public wedxGroup;
+    address public wedxSwap;
+    address public wedxLender;
+    address public wedxManager;
+    address public wedxRanker;
+    address public wedxTreasury;
+
+    constructor(
+        address _wedxGroup,
+        address _wedxSwap,
+        address _wedxLender,
+        address _wedxManager,
+        address _wedxRanker,
+        address _wedxTreasury
+    ) {
+        wedxGroup = _wedxGroup;
+        wedxSwap = _wedxSwap;
+        wedxLender = _wedxLender;
+        wedxManager = _wedxManager;
+        wedxRanker = _wedxRanker;
+        wedxTreasury = _wedxTreasury;
+    }
 }
 
 contract uniV3Constants {

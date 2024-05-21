@@ -7,6 +7,8 @@ pragma abicoder v2;
 
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {console2} from "forge-std/Test.sol";
+
 
 contract WEDXRanker {
     using SafeMath for uint256;
@@ -35,6 +37,8 @@ contract WEDXRanker {
             }
         }
         sigma = sigma / int256(_nPoints - 2);
+        console2.log("Final sigma in contracts:", sigma);
+
 
         //I need to make positive the Rank, solving for y1-y0.
         if (sigma > 0) {

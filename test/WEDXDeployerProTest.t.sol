@@ -4,21 +4,55 @@ pragma solidity ^0.8.20;
 import "forge-std/Test.sol";
 import "../contracts/WEDXDeployerPro.sol";
 import "../contracts/WEDXProPortfolio.sol";
+import "../contracts/WEDXGroup.sol";
+import "../contracts/WEDXswap.sol";
+import "../contracts/WEDXlender.sol";
+import "../contracts/WEDXManager.sol";
+import "../contracts/WEDXRanker.sol";
+import "../contracts/WEDXTreasury.sol";
+import "../contracts/WEDXConstants.sol";
 
 contract WEDXProPortfolioTest is Test {
     WEDXDeployerPro deployer;
+    WEDXGroup wedxGroup;
+    WEDXswap wedxSwap;
+    WEDXLender wedxLender;
+    WEDXManager wedxManager;
+    WEDXRanker wedxRanker;
+    WEDXTreasury wedxTreasury;
+    WEDXConstants wedxConstants;
     address portfolioAddress;
     MaliciousContract malicious;
     address owner = address(this);
 
-    // Real on-chain contract addresses
-    // address wedxGroupAddress = 0x...; // real WEDXGroup contract address
-    // address assetManagerAddress = 0x...; // real AssetManager contract address
-    // address treasuryAddress = 0x...; // real Treasury contract address
-    // address swapContractAddress = 0x...; // real Swap contract address
-    // address lenderContractAddress = 0x...; // real Lender contract address
-
     function setUp() public {
+        // Deploy the WEDXGroup contract
+        wedxGroup = new WEDXGroup();
+
+        // Deploy the other necessary contracts
+        wedxSwap = new WEDXswap();
+        wedxLender = new WEDXLender();
+        wedxManager = new WEDXManager();
+        wedxRanker = new WEDXRanker();
+        wedxTreasury = new WEDXTreasury();
+
+        // Update WEDXGroup with the addresses of the deployed contracts
+        wedxGroup.changeManager(address(wedxManager));
+        wedxGroup.changeSwap(address(wedxSwap));
+        wedxGroup.changeLender(address(wedxLender));
+        wedxGroup.changeRanker(address(wedxRanker));
+        wedxGroup.changeTreasury(address(wedxTreasury));
+
+        // Deploy the WEDXConstants contract with the addresses
+        wedxConstants = new WEDXConstants(
+            address(wedxGroup),
+            address(wedxSwap),
+            address(wedxLender),
+            address(wedxManager),
+            address(wedxRanker),
+            address(wedxTreasury)
+        );
+
         // Deploy the deployer contract
         deployer = new WEDXDeployerPro();
 
