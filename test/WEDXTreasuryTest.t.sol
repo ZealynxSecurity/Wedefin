@@ -21,7 +21,7 @@ contract MintingTest is Test {
     function setUp() public {
         mockWEDXManager = new MockWEDXManager();
         mockWEDXGroup = new MockWEDXGroup(address(mockWEDXManager));
-        treasury = new WEDXTreasury(address(mockWEDXGroup));
+        treasury = new WEDXTreasury();
         attacker = new ReentrancyAttack(payable(address(treasury)));
         thirdParty = payable(address(0x1234)); // Third party address
     }

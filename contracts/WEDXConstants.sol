@@ -37,36 +37,14 @@ contract uniV3Constants {
 // Arbitrum One (mainnet):
 address constant WNATIVE = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
 address constant _poolAddressProviderAAVE = 0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb;
-address constant _wedxGroupAddress = 0x64B2079EC8aBa8cF1C9827916702Bf13C89f9584;
+address constant _wedxGroupAddress = 0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f;
 
 contract WEDXConstants {
     address[] public tokenAddressesInit = [WNATIVE]; // replace with the actual addresses of the tokens
-
-    address public wedxGroup;
-    address public wedxSwap;
-    address public wedxLender;
-    address public wedxManager;
-    address public wedxRanker;
-    address public wedxTreasury;
-
-    constructor(
-        address _wedxGroup,
-        address _wedxSwap,
-        address _wedxLender,
-        address _wedxManager,
-        address _wedxRanker,
-        address _wedxTreasury
-    ) {
-        wedxGroup = _wedxGroup;
-        wedxSwap = _wedxSwap;
-        wedxLender = _wedxLender;
-        wedxManager = _wedxManager;
-        wedxRanker = _wedxRanker;
-        wedxTreasury = _wedxTreasury;
-    }
 }
 
 contract uniV3Constants {
     address[] public _uniswapRouterAddress = [0xE592427A0AEce92De3Edee1F18E0157C05861564, 0x8A21F6768C1f8075791D08546Dadf6daA0bE820c]; //Uniswap, Sushiswap
     address[] public _uniswapPoolFactoryAddress = [0x1F98431c8aD98523631AE4a59f267346ea31F984, 0x1af415a1EbA07a4986a52B6f2e7dE7003D82231e]; //Uniswap, Sushiswap
 }
+
