@@ -14,6 +14,9 @@ import "../contracts/WEDXRanker.sol";
 import "../contracts/WEDXTreasury.sol";
 import "../contracts/WEDXConstants.sol";
 
+import "./interfaces/interface.sol";
+
+
 contract WEDXBasePortfolioTest is Test {
     WEDXDeployerPro deployerPro;
     WEDXDeployerIndex deployerIndex;
@@ -27,6 +30,10 @@ contract WEDXBasePortfolioTest is Test {
     address proPortfolioAddress;
     address indexPortfolioAddress;
     address owner = address(this);
+
+    address private constant USDC = 0xaf88d065e77c8cC2239327C5EDb3A432268e5831;
+    address private constant WETH = 0x35751007a407ca6FEFfE80b3cB397736D2cf4dbe;
+    address constant WNATIVE = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
 
     function setUp() public {
         // Deploy the WEDXGroup contract
@@ -70,9 +77,9 @@ contract WEDXBasePortfolioTest is Test {
     function testGetAssets() public {
         // Step 1: Set up initial assets and their amounts
         address[] memory newAssets = new address[](3);
-        newAssets[0] = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48; // USDC
-        newAssets[1] = 0x6B175474E89094C44Da98b954EedeAC495271d0F; // DAI
-        newAssets[2] = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // WETH
+        newAssets[0] = 0xaf88d065e77c8cC2239327C5EDb3A432268e5831; // USDC
+        newAssets[1] = 0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1; // DAI
+        newAssets[2] = 0x35751007a407ca6FEFfE80b3cB397736D2cf4dbe; // WETH
 
         uint256[] memory amounts = new uint256[](3);
         amounts[0] = 1000 * 1e6; // 1000 USDC
@@ -166,4 +173,48 @@ contract WEDXBasePortfolioTest is Test {
         assertEq(delegatedAddress, expectedDelegatedAddress, "Delegated address should match");
     }
 
+
+
+    function testValidatePPoolOnchainWithSameTokens() public {
+        exInfo memory result = wedxSwap.validatePool(USDC, USDC);
+
+        assertTrue(result.exId >= 0);
+        assertTrue(result.feeUniswap >= 0);
+        assertTrue(result.liquidity >= 0);
+    }
+
+
+    uint256 constant USDC_INITIAL_SUPPLY = 1000 * 1e6; // 1,000 USDC
+    uint256 constant WETH_INITIAL_SUPPLY = 1 * 1e18; // 1 WETH
+    IWETH9 weth;
+    IERC20 usdc;
+    function testSwapERC20_USDCtoWETH() public {
+        
+        weth = IWETH9(WETH);
+        usdc = IERC20(USDC);
+
+        // Deal some WETH to the contract
+        deal(WETH, owner, WETH_INITIAL_SUPPLY);
+        // weth.deposit{value: WETH_INITIAL_SUPPLY}();
+
+        // Ensure the owner has enough USDC for the test
+        deal(USDC, owner, USDC_INITIAL_SUPPLY);
+ 
+
+        // Approve tokens for the swap contract
+        weth.approve(address(wedxSwap), WETH_INITIAL_SUPPLY);
+        usdc.approve(address(wedxSwap), USDC_INITIAL_SUPPLY);
+
+
+       uint256 amountIn = 5 * 1e6; // 500 USDC
+        uint256 maxSlippage = 50; // 0.5% max slippage
+
+        vm.prank(owner);
+        WEDXProPortfolio(payable(proPortfolioAddress)).deposit{value: 1 ether}();
+        // Perform the swap
+        vm.prank(owner);
+        uint256 amountOut = wedxSwap.swapNative(USDC, maxSlippage);
+
+        console.log("USDC to WETH swap successful with amount out:", amountOut);
+    }
 }
