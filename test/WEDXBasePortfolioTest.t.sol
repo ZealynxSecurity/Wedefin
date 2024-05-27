@@ -120,7 +120,6 @@ contract WEDXBasePortfolioTest is Test {
         address[] memory tokenAddresses = new address[](3);
         tokenAddresses[0] = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1; // cWNATIVEAddress
 
-
         // Step 2: Deposit ETH to the pro portfolio to simulate asset acquisition
         uint256 depositAmount = 1 ether;
 
