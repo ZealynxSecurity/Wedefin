@@ -24,7 +24,6 @@ contract WEDXIndexPortfolioTest is Test {
     WEDXRanker wedxRanker;
     WEDXTreasury wedxTreasury;
     WEDXConstants wedxConstants;
-    address proPortfolioAddress;
     address indexPortfolioAddress;
     // MaliciousContract maliciousPro;
     // MaliciousContract maliciousIndex;
@@ -53,7 +52,6 @@ contract WEDXIndexPortfolioTest is Test {
 
         wedxGroup.changeDeployerIndexAddress(address(deployerIndex));
 
- 
         // Create the index portfolio using the deployerIndex
         vm.startPrank(owner);
         deployerIndex.createIndexPortfolio();
@@ -72,56 +70,60 @@ contract WEDXIndexPortfolioTest is Test {
     }
 
 
+function testIndexDepositWithSimpleFee() public {
+    address cWNATIVEAddress = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
 
-    // function testProDeposit() public {
-    //     uint256 initialBalance = address(proPortfolioAddress).balance;
-    //     uint256 depositAmount = 1 ether;
+    uint256 initialBalance = IWETH9(cWNATIVEAddress).balanceOf(indexPortfolioAddress);
+    uint256 depositAmount = 1 ether;
 
-    //     // Deposit into the pro portfolio
-    //     vm.prank(owner);
-    //     WEDXProPortfolio(payable(proPortfolioAddress)).deposit{value: depositAmount}();
-    //     uint256 finalBalance = address(proPortfolioAddress).balance;
+    console.log("Initial Balance in cWNATIVE:", initialBalance);
 
-    //     assertEq(finalBalance, initialBalance + depositAmount);
-    // }
+    // Mock the fee percentage
+    uint256 feePercentage = 100; 
+    uint256 distroNorm = 10000;  
 
-    function testIndexDeposit() public {
-        uint256 initialBalance = address(indexPortfolioAddress).balance;
-        uint256 depositAmount = 1 ether;
+    vm.mockCall(
+        IWEDXGroup(_wedxGroupAddress).getAssetManagerAddress(),
+        abi.encodeWithSelector(IWEDXManager(IWEDXGroup(_wedxGroupAddress).getAssetManagerAddress()).depositWithdrawFee.selector),
+        abi.encode(feePercentage)
+    );
 
-        // Deposit into the index portfolio
-        vm.prank(owner);
-        WEDXIndexPortfolio(payable(indexPortfolioAddress)).deposit{value: depositAmount}();
-        uint256 finalBalance = address(indexPortfolioAddress).balance;
+    uint256 fee = (depositAmount * feePercentage) / distroNorm;
+    uint256 expectedDepositAmount = depositAmount - fee;
 
-        assertEq(finalBalance, initialBalance + depositAmount);
+    vm.mockCall(
+        IWEDXGroup(_wedxGroupAddress).getTreasuryAddress(),
+        abi.encodeWithSelector(IWEDXTreasury(IWEDXGroup(_wedxGroupAddress).getTreasuryAddress()).depositGeneralFee.selector),
+        abi.encode()
+    );
+
+    // Perform the deposit
+    vm.prank(owner);
+    uint256 result = WEDXIndexPortfolio(payable(indexPortfolioAddress)).deposit{value: depositAmount}();
+    console.log("Deposit result:", result);
+
+    // Verify the final balance in cWNATIVE
+    uint256 finalBalance = IWETH9(cWNATIVEAddress).balanceOf(indexPortfolioAddress);
+    console.log("Final Balance in cWNATIVE:", finalBalance);
+
+    // Assertions
+    assertApproxEqRel(result, expectedDepositAmount, 1e16); // 1% tolerance
+    assertTrue(finalBalance > initialBalance, "Final balance in cWNATIVE should be greater than initial balance after deposit");
+
+    // Verifying balances after potential lending
+    for (uint i = 0; i < WEDXIndexPortfolio(payable(indexPortfolioAddress)).getAddresses().length; i++) {
+        address token = WEDXIndexPortfolio(payable(indexPortfolioAddress)).getAddresses()[i];
+        uint256 balance = IWETH9(token).balanceOf(indexPortfolioAddress);
+        console.log("Token balance after lending in cWNATIVE for token:", balance);
     }
+}
 
-    // function testProWithdrawBruteForcedReentrancy() public {
-    //     uint256 depositAmount = 1 ether;
 
-    //     // Attempt to exploit reentrancy in pro portfolio
-    //     vm.expectRevert("Withdrawal failed");
-    //     vm.prank(owner);
-    //     maliciousPro.attack{value: depositAmount}();
 
-    //     // Ensure the balance is not drained
-    //     uint256 finalBalance = address(proPortfolioAddress).balance;
-    //     assertEq(finalBalance, 10 ether);  // Ensure the balance is not drained
-    // }
 
-    // function testIndexWithdrawBruteForcedReentrancy() public {
-    //     uint256 depositAmount = 1 ether;
 
-    //     // Attempt to exploit reentrancy in index portfolio
-    //     vm.expectRevert("Withdrawal failed");
-    //     vm.prank(owner);
-    //     maliciousIndex.attack{value: depositAmount}();
 
-    //     // Ensure the balance is not drained
-    //     uint256 finalBalance = address(indexPortfolioAddress).balance;
-    //     assertEq(finalBalance, 10 ether);  // Ensure the balance is not drained
-    // }
+
 }
 
 // contract MaliciousContract {

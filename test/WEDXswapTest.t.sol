@@ -3,40 +3,76 @@ pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 import "../contracts/WEDXswap.sol"; 
-import "./mocks/MockERC20.sol"; 
+import "./interfaces/interface.sol";
 
 contract WEDXswapTest is Test {
     WEDXswap swapContract;
-    MockERC20 tokenA;
-    MockERC20 tokenB;
-    address private constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
-    address private constant DAI = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
-    address private constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    IWETH9 weth;
+    IERC20 usdc;
+    address owner = address(this);
 
+    address private constant USDC = 0xaf88d065e77c8cC2239327C5EDb3A432268e5831;
+    address private constant WETH = 0x35751007a407ca6FEFfE80b3cB397736D2cf4dbe;
 
+    uint256 constant USDC_INITIAL_SUPPLY = 1000 * 1e6; // 1,000 USDC
+    uint256 constant WETH_INITIAL_SUPPLY = 1 * 1e18; // 1 WETH
 
     function setUp() public {
-        // Deploy mock tokens
-        tokenA = new MockERC20("Token A", "TKA", 18);
-        tokenB = new MockERC20("Token B", "TKB", 18);
+        weth = IWETH9(WETH);
+        usdc = IERC20(USDC);
 
         // Deploy the swap contract
         swapContract = new WEDXswap();
+
+        // Deal some WETH to the contract
+        deal(WETH, address(this), WETH_INITIAL_SUPPLY);
+        weth.deposit{value: WETH_INITIAL_SUPPLY}();
+
+        // Ensure the owner has enough USDC for the test
+        deal(USDC, owner, USDC_INITIAL_SUPPLY);
+
+        // Approve tokens for the swap contract
+        weth.approve(address(swapContract), WETH_INITIAL_SUPPLY);
+        usdc.approve(address(swapContract), USDC_INITIAL_SUPPLY);
     }
 
-    function testValidatePoolWithSameTokens() public {
-        // Attempt to validate pool with the same token for both input and output
-        try swapContract.validatePool(address(tokenA), address(tokenA)) {
-            fail(); // Expected validatePool to revert with identical tokens
-        } catch Error(string memory reason) {
-            assertEq(reason, "Tokens must be different");
-        } catch (bytes memory /*lowLevelData*/) {
-            fail(); // Expected validatePool to revert with 'Tokens must be different' error
-        }
+    function testSwapERC20_USDCtoWETH() public {
+        uint256 amountIn = 500 * 1e6; // 500 USDC
+        uint256 maxSlippage = 50; // 0.5% max slippage
+
+        uint256 initialWethBalance = weth.balanceOf(owner);
+
+        // Perform the swap
+        vm.prank(owner);
+        uint256 amountOut = swapContract.swapERC20(USDC, WETH, amountIn, maxSlippage);
+
+        uint256 finalWethBalance = weth.balanceOf(owner);
+
+        // Check the results
+        assertTrue(finalWethBalance > initialWethBalance, "WETH balance should increase after swap");
+        console.log("USDC to WETH swap successful with amount out:", amountOut);
     }
+
+    function testSwapERC20_WETHtoUSDC() public {
+        uint256 amountIn = 0.5 * 1e18; // 0.5 WETH
+        uint256 maxSlippage = 50; // 0.5% max slippage
+
+        uint256 initialUsdcBalance = usdc.balanceOf(owner);
+
+        // Perform the swap
+        vm.prank(owner);
+        uint256 amountOut = swapContract.swapERC20(WETH, USDC, amountIn, maxSlippage);
+
+        uint256 finalUsdcBalance = usdc.balanceOf(owner);
+
+        // Check the results
+        assertTrue(finalUsdcBalance > initialUsdcBalance, "USDC balance should increase after swap");
+        console.log("WETH to USDC swap successful with amount out:", amountOut);
+    }
+
     function testValidatePoolOnchainWithSameTokens() public {
         // Attempt to validate pool with the same token for both input and output
-        try swapContract.validatePool((USDC), (USDC)) {
+        try swapContract.validatePool(USDC, USDC) {
             fail(); // Expected validatePool to revert with identical tokens
         } catch Error(string memory reason) {
             assertEq(reason, "Tokens must be different");
@@ -45,15 +81,6 @@ contract WEDXswapTest is Test {
         }
     }
 
-    function testValidatePoolWithDifferentTokens() public {
-        // Validate pool with different tokens
-        try swapContract.validatePool(address(tokenA), address(tokenB)) {
-            // Expected to pass as tokens are different
-            assertTrue(true);
-        } catch {
-            fail(); // validatePool should not revert with different tokens
-        }
-    }
     function testValidatePoolOnchainWithDifferentTokens() public {
         exInfo memory result = swapContract.validatePool(USDC, WETH);
 
@@ -61,11 +88,12 @@ contract WEDXswapTest is Test {
         assertTrue(result.feeUniswap >= 0);
         assertTrue(result.liquidity >= 0);
     }
-    function testSwapNative() public {
-        swapContract.swapNative(WETH, 10);
 
+    function testValidatePPoolOnchainWithSameTokens() public {
+        exInfo memory result = swapContract.validatePool(USDC, USDC);
 
+        assertTrue(result.exId >= 0);
+        assertTrue(result.feeUniswap >= 0);
+        assertTrue(result.liquidity >= 0);
     }
 }
-
-//forge test --fork-url https://eth-mainnet.g.alchemy.com/v2/Se-CTmWnCJVhHI6Sz_-rWeu5xUuJ81t- --mc WEDXswapTest --mt testValidatePoolOnchainWithDifferentTokens -vvvv

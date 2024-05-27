@@ -7,7 +7,7 @@ import "../contracts/IWEDXInterfaces.sol";
 import "./mocks/MockWEDXManager.sol";
 import "./mocks/MockWEDXGroup.sol";
 
-contract MintingTest is Test {
+contract WEDXTreasuryest is Test {
     WEDXTreasury treasury;
     MockWEDXGroup mockWEDXGroup;
     MockWEDXManager mockWEDXManager;
