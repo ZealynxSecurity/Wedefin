@@ -1,4 +1,0 @@
-Contract: contracts/WEDXBasePortfolio.sol:WEDXBasePortfolio(0x60f500fba04b83e12de7a20fe9839d9716d214a0)
-Instruction Coverage: 196/4793 (4.09%) 
-Branch Coverage: 18/288 (6.25%) 
---------------------------------
