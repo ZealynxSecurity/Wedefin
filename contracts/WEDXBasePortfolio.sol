@@ -39,7 +39,7 @@ contract WEDXBasePortfolio is WEDXConstants, Ownable {
         uint256 fee = ( msg.value * IWEDXManager(IWEDXGroup(_wedxGroupAddress).getAssetManagerAddress()).depositWithdrawFee() ) / distroMath.distroNorm;
         IWEDXTreasury(IWEDXGroup(_wedxGroupAddress).getTreasuryAddress()).depositGeneralFee{value: fee}();
 
-        uint256 ethAmount = msg.value - fee;
+        uint256 ethAmount = msg.value - fee; //@audit => msg.value > fee
         uint256 amountReturn = 0;
         uint256 supply = getSupply();
         uint256[] memory distribution = getActualDistribution();

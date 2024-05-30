@@ -18,6 +18,9 @@ import "./WEDXConstants.sol";
 import "./library/distroMath.sol";
 import "./IWEDXInterfaces.sol";
 
+import {console} from "forge-std/Test.sol";
+
+
 contract WEDXswap is uniV3Constants {
     using SafeMath for uint256;
     ISwapRouter[] private router;
@@ -126,7 +129,7 @@ contract WEDXswap is uniV3Constants {
     }
 
     //Check if there is an existing pool for that pair and if exists, then record it
-    function validatePool( address tokenIn, address tokenOut ) public view returns (exInfo memory) {
+    function validatePool( address tokenIn, address tokenOut ) public view returns (exInfo memory) { //@audit => loop
         exInfo memory result;
         uint128 refLiquidity = 0;
         for(uint16 j=0; j < poolFactory.length; j++) {
